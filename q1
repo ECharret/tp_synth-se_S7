@@ -1,0 +1,7 @@
+#include <unistd.h>
+#include <string.h>
+
+void main(){
+	char *str="$ ./enseash\nBienvenue dans le SHELL ENSEA\nPour quitter, taper 'exit'.\nenseash % \n";
+	write(STDOUT_FILENO, str, strlen(str));
+}
