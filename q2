@@ -1,0 +1,37 @@
+#include <unistd.h>
+#include <string.h>
+#include <sys/wait.h>
+#include <stdlib.h>
+
+void prompt(){
+	char *str="enseash % \n";
+	write(STDOUT_FILENO, str, strlen(str));
+}
+
+void execute(){
+	//reading of the command
+	char input[128];
+	int size=read(STDIN_FILENO, input, 128);
+	char *cmd=malloc((size-1)*sizeof(char));
+	strncpy(cmd, input, size-1);
+	
+	//creation of a new process
+	pid_t pid = fork();
+	int status;
+	if (pid!=0){
+		wait(&status);
+	}
+	else{
+		execlp(cmd, cmd,NULL); //execution of the command
+		
+	}
+	
+}
+
+void main(){
+	while(1){
+		prompt();
+		execute();
+	}
+	
+}
