@@ -10,7 +10,7 @@ void prompt(){
 
 void stop(char *cmd){
 	if(strncmp(cmd,"exit",4)==0){
-		char *bye="Bye bye...";
+		char *bye="Bye bye...\n$\n";
 		write(STDOUT_FILENO, bye, strlen(bye));
 		exit(EXIT_SUCCESS);
 	}
@@ -24,6 +24,7 @@ void execute(){
 	char *cmd=malloc((size-1)*sizeof(char));
 	strncpy(cmd, input, size-1);
 	
+	//verify if the command stop the programme
 	stop(cmd);
 	
 	//creation of a new process
