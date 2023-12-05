@@ -1,0 +1,76 @@
+#include <unistd.h>
+#include <string.h>
+#include <sys/wait.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <time.h>
+
+void prompt(){
+	char *str="enseash % \n";
+	write(STDOUT_FILENO, str, strlen(str));
+}
+
+void stop(char *cmd){
+	if(strncmp(cmd,"exit",4)==0){
+		char *bye="enseash [exit:0]\nBye bye...";
+		write(STDOUT_FILENO, bye, strlen(bye));
+		exit(EXIT_SUCCESS);
+	}
+}
+
+char *readcmd(){
+	//reading of the command
+	char input[128];
+	int size=read(STDIN_FILENO, input, 128);
+	char *cmd=malloc((size-1)*sizeof(char));
+	strncpy(cmd, input, size-1);
+	return cmd;
+}
+
+void execute(char *cmd){
+	
+	//verify if the command stop the programme
+		stop(cmd);
+		
+	//creation of a new process
+	pid_t pid = fork();
+	int status;
+	
+	//initialisation of the clock
+	struct timespec start, stop;
+	clock_gettime(CLOCK_REALTIME, &start);
+	
+	if (pid!=0){ //processus pere
+		
+		wait(&status);
+		clock_gettime(CLOCK_REALTIME, &stop);
+		
+		unsigned long long int period=(stop.tv_nsec-start.tv_nsec)/1000;
+		
+		char *exitvalue=malloc((15)*sizeof(char));
+		
+		if(WIFEXITED(status)){
+			sprintf(exitvalue, "enseash [exit:%d||%lldms] \n",WEXITSTATUS(status), period);
+		}
+		if(WIFSIGNALED(status)){
+			sprintf(exitvalue,"enseash [sign %d||%lldms] \n", WTERMSIG(status),period);
+		}	
+		write(STDOUT_FILENO, exitvalue,strlen(exitvalue));
+	}
+	
+	else{ //processus fils
+		printf("fils: %d\n", getpid());
+		sleep(5);
+		execlp(cmd, cmd,NULL); //execution of the command
+		exit(123);
+	}
+}
+
+
+int main(){
+	while(1){
+		prompt();
+		char *cmd=readcmd();
+		execute(cmd);
+	}	
+}
