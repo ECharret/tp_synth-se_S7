@@ -1,0 +1,68 @@
+#include <unistd.h>
+#include <string.h>
+#include <sys/wait.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+void prompt(){
+	char *str="enseash % \n";
+	write(STDOUT_FILENO, str, strlen(str));
+}
+
+void stop(char *cmd){
+	if(strncmp(cmd,"exit",4)==0){
+		char *bye="enseash [exit:0]\nBye bye...";
+		write(STDOUT_FILENO, bye, strlen(bye));
+		exit(EXIT_SUCCESS);
+	}
+}
+
+char *readcmd(){
+	//reading of the command
+	char input[128];
+	int size=read(STDIN_FILENO, input, 128);
+	char *cmd=malloc((size-1)*sizeof(char));
+	strncpy(cmd, input, size-1);
+	return cmd;
+}
+
+void execute(char *cmd){
+	
+	//verify if the command stop the programme
+		stop(cmd);
+		
+	//creation of a new process
+	pid_t pid = fork();
+	int status;
+	
+	if (pid!=0){
+		wait(&status);
+		char *exitvalue=malloc((8)*sizeof(char));
+		if(WIFEXITED(status)){
+			sprintf(exitvalue, "enseash [exit:%d] \n",WEXITSTATUS(status));
+		}
+		if(WIFSIGNALED(status)){
+			sprintf(exitvalue,"enseash [sign %d] \n", WTERMSIG(status));
+		}	
+		write(STDOUT_FILENO, exitvalue,strlen(exitvalue));
+	}
+	else{
+		printf("fils: %d\n", getpid());
+		//write(STDOUT_FILENO, pid,strlen("pid"));
+		sleep(5);
+		execlp(cmd, cmd,NULL); //execution of the command
+		exit(123);
+		
+	}
+	
+}
+
+
+void main(){
+	while(1){
+		prompt();
+		char *cmd=readcmd();
+		execute(cmd);
+	}
+	
+}
